@@ -1,0 +1,10 @@
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Mac system file
+.DS_Store
+
+# IDE
+.vscode/
