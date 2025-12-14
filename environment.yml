@@ -16,4 +16,3 @@ dependencies:
     - dalex
     - pre-commit
     - kagglehub
-    - nbstripout

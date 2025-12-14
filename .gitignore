@@ -11,3 +11,6 @@ __pycache__/
 
 # Data
 data/
+
+# Playground files
+notebooks/eda_cleaning.py
