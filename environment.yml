@@ -15,3 +15,5 @@ dependencies:
   - pip:
     - dalex
     - pre-commit
+    - kagglehub
+    - nbstripout
