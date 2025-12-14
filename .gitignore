@@ -12,5 +12,6 @@ __pycache__/
 # Data
 data/
 
-# Playground files
-notebooks/eda_cleaning.py
+# Playground files (exported from notebooks)
+notebooks/*.py
+notebooks/*.html
