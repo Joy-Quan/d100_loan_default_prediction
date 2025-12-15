@@ -1,5 +1,6 @@
 import sys
 import warnings
+import joblib
 import pandas as pd
 from pathlib import Path
 from sklearn.model_selection import train_test_split, GridSearchCV, RandomizedSearchCV
@@ -17,6 +18,8 @@ import lightgbm as lgb
 # ---------------------------------------------------
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 PROCESSED_DATA_FILE = PROJECT_DIR / "data" / "processed" / "cleaned_data.parquet"
+MODELS_DIR = PROJECT_DIR / "models"
+MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Define feature groups based on the dataset
 NUMERIC_FEATURES = [
@@ -237,7 +240,7 @@ if __name__ == "__main__":
     # 3. Tune LGBM
     best_lgbm = tune_lgbm_model(X_train, y_train, num_cols, cat_cols)
     
-    # 4. Final Evaluation on Test Set (Optional but recommended)
+    # 4. Final Evaluation on Test Set
     print("\n--- Final Evaluation on Test Set ---")
     
     print("GLM Report:")
@@ -247,3 +250,17 @@ if __name__ == "__main__":
     print("LGBM Report:")
     y_pred_lgbm = best_lgbm.predict(X_test)
     print(classification_report(y_test, y_pred_lgbm))
+    
+    # 5. Save Models
+    print("\n--- Saving Models ---")
+    
+    glm_path = MODELS_DIR / "glm_model.joblib"
+    lgbm_path = MODELS_DIR / "lgbm_model.joblib"
+    
+    print(f"Saving GLM model to {glm_path}...")
+    joblib.dump(best_glm, glm_path)
+    
+    print(f"Saving LGBM model to {lgbm_path}...")
+    joblib.dump(best_lgbm, lgbm_path)
+    
+    print("Models saved successfully!")
