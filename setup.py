@@ -14,5 +14,6 @@ setup(
         "lightgbm",
         "pyarrow",  # for parquet
         "dalex",    # for model interpretation
+        "pytest",
     ],
 )
