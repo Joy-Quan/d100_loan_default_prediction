@@ -16,3 +16,4 @@ dependencies:
     - dalex
     - pre-commit
     - kagglehub
+    - pytest
