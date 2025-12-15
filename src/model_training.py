@@ -46,9 +46,15 @@ warnings.filterwarnings("ignore", message=".*X does not have valid feature names
 # ---------------------------------------------------
 # 2. Data Loading & Splitting
 # ---------------------------------------------------
-def load_and_split_data(test_size=0.2, random_state=42):
+def load_and_split_data(test_size=0.2, random_state=42, max_rows=30000):
     """
     Load cleaned data and perform stratified split.
+    
+    Args:
+        test_size (float): Proportion of the dataset to include in the test split.
+        random_state (int): Seed for reproducibility.
+        max_rows (int): Maximum number of rows to use. If None, use full dataset.
+                        Defaults to 30000 to speed up training during development/grading.
     """
     if not PROCESSED_DATA_FILE.exists():
         raise FileNotFoundError(f"File not found: {PROCESSED_DATA_FILE}")
@@ -57,6 +63,19 @@ def load_and_split_data(test_size=0.2, random_state=42):
     df = pd.read_parquet(PROCESSED_DATA_FILE)
     target_col = 'Status'
     
+    # Downsample using stratified sampling since data is too large
+    if max_rows and len(df) > max_rows:
+        print(
+            f"⚠️  Downsampling data from {len(df)} to {max_rows} rows (Stratified) "
+                + "since the training time may be too long..."
+        )
+        df, _ = train_test_split(
+            df, 
+            train_size=max_rows, 
+            stratify=df[target_col], 
+            random_state=random_state
+        )
+
     X = df.drop(columns=[target_col])
     y = df[target_col]
     
@@ -65,6 +84,7 @@ def load_and_split_data(test_size=0.2, random_state=42):
     valid_cat = [c for c in CATEGORICAL_FEATURES if c in X.columns]
     
     print(f"Features selected: {len(valid_num)} numerical, {len(valid_cat)} categorical.")
+    print(f"Total samples for training/testing: {len(X)}")
 
     # Stratified split ensures class balance is maintained
     return train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y), valid_num, valid_cat
@@ -154,7 +174,7 @@ def tune_glm_model(X_train, y_train, num_cols, cat_cols):
         cv=3, 
         scoring='f1', 
         n_jobs=-1,
-        verbose=1
+        verbose=2,
     )
     
     search.fit(X_train, y_train)
@@ -186,8 +206,8 @@ def tune_lgbm_model(X_train, y_train, num_cols, cat_cols):
         cv=3,
         scoring='f1',
         n_jobs=-1,
-        verbose=1,
-        random_state=42
+        verbose=2,
+        random_state=42,
     )
 
     search.fit(X_train, y_train)
@@ -206,14 +226,10 @@ if __name__ == "__main__":
     from src.feature_engineering import CustomStandardScaler
 
     # 1. Load Data
-    (X_train, X_test, y_train, y_test), num_cols, cat_cols = load_and_split_data()
-    
-    # # Use a smaller subset for testing/debugging if needed to save time
-    # X_train = X_train.iloc[:5000]
-    # y_train = y_train.iloc[:5000]
-    # print("Warning: Using subset of data for fast demonstration.")
-    
-    print(f"X(training set) shape: {X_train.shape}")
+    (X_train, X_test, y_train, y_test), num_cols, cat_cols = load_and_split_data(
+        test_size=0.2, random_state=42, max_rows=30000,
+    )
+    print(f"Training set shape: {X_train.shape}")
 
     # 2. Tune GLM
     best_glm = tune_glm_model(X_train, y_train, num_cols, cat_cols)
